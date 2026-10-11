@@ -44,9 +44,6 @@
   function ok(code) { return rates && typeof rates[code] === 'number' && rates[code] > 0; }
 
   function buildUI() {
-    var opts = CURRENCIES.map(function (c) { return '<option value="' + c[0] + '">' + c[0] + ' ' + c[1] + '</option>'; }).join('');
-    $('base').innerHTML = opts; $('quote').innerHTML = opts;
-    $('base').value = 'CNY'; $('quote').value = 'USD';
     var list = $('list');
     CURRENCIES.forEach(function (c) {
       var li = document.createElement('li'); li.className = 'row'; li.dataset.code = c[0];
@@ -58,7 +55,7 @@
       inp.addEventListener('blur', function () { state.editing = null; render(); });
       inp.addEventListener('input', function () {
         state.code = c[0]; state.amount = inp.value;
-        $('base').value = c[0]; $('amount').value = inp.value; render();
+        render();
       });
       list.appendChild(li); rowEls[c[0]] = { li: li, inp: inp };
     });
@@ -74,11 +71,6 @@
       if (state.editing === code) return;               // 正在输入的框不改写，避免光标/小数点异常
       r.inp.value = usable ? fmt(convert(amt, state.code, code), code) : '';
     });
-    var q = $('quote').value, s = $('summary');
-    if (usable && ok(q)) {
-      s.innerHTML = state.amount.trim() + ' ' + state.code + ' ≈ ' + fmt(convert(amt, state.code, q), q) + ' ' + q +
-        '<small>1 ' + state.code + ' = ' + (convert(1, state.code, q)).toPrecision(6).replace(/\.?0+$/, '') + ' ' + q + '</small>';
-    } else s.textContent = rates ? '请输入有效金额，且所选货币需有汇率数据' : '尚无汇率数据';
     applySearch();
   }
 
@@ -159,14 +151,6 @@
   }
 
   buildUI(); loadCache();
-  $('amount').addEventListener('input', function () { state.amount = this.value; render(); });
-  $('base').addEventListener('change', function () { state.code = this.value; render(); });
-  $('quote').addEventListener('change', render);
-  $('swap').addEventListener('click', function () {
-    var b = $('base').value, q = $('quote').value, amt = parse(state.amount);
-    if (ok(b) && ok(q) && amt !== null) state.amount = fmt(convert(amt, b, q), q);   // 金额随之换算，保持价值一致
-    $('base').value = q; $('quote').value = b; state.code = q; $('amount').value = state.amount; render();
-  });
   $('search').addEventListener('input', applySearch);
   $('refresh').addEventListener('click', function () { load(true); });
   status(); render();
